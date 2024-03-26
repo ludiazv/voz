@@ -1,0 +1,22 @@
+.{
+    .name = "voz",
+    .version = "0.0.1",
+    .dependencies = .{
+        //.network = .{
+        //    .url = "https://github.com/MasterQ32/zig-network/archive/07ef40cacd7b00bc0f26e254d97d4d4c9071195a.tar.gz",
+        //    .hash = "12204d3d4c1184d379a78399e5ddd8a46fe19ca6c991d5c9b909c1980d14acb1dede",
+        //},
+	.clap = .{
+	    .url ="https://github.com/Hejsil/zig-clap/archive/cf3a4e763831dd7e0845fef4f209f5c780eda375.tar.gz",
+	    .hash ="1220b641ac5ed4187f293906201ee07f98423c942bf82e28c7c75a22d700b494c177",
+	},
+	.serial = .{
+	     .url = "https://github.com/ZigEmbeddedGroup/serial/archive/ff5179d973736a4cb1696cdd0b54379e4aadfdd0.tar.gz",
+	     .hash = "122073c69f19aff9def1527e44f7507680e204f1b84c215d17d3bfe8c75be5f43c1c",
+	},
+	.gpio = .{
+            .url = "https://gitea.elara.ws/Elara6331/zig-gpio/archive/v0.0.1.tar.gz",
+            .hash = "1220e3af3194d1154217423d60124ae3a46537c2253dbfb8057e9b550526d2885df1",
+        }
+    },
+}
