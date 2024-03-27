@@ -1,0 +1,23 @@
+name: Build
+on:
+  workflow_dispatch:
+  #push:
+  #  branches: [ "master" ]
+  #pull_request:
+  #  branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup zig
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: 0.11.0
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: build Deps
+      run: ./deps.sh
+    - name: List Deps
+      run: ls -lR ./lib
