@@ -175,7 +175,7 @@ for a in "${ARCHS_GNU[@]}" ; do
    fi
 
    [ ! -d build_${a}_gnu ] && ./cc-${a}.sh bash -c "${patch_toolchain} cmake -B build_${a}_gnu ${TF_SRC}/tensorflow/lite/c $cmake_opt"
-   [ ! -f build_${a}_gnu/$LIBNAME ] && ./cc-${a}.sh bash -c "cd build_${a}_gnu ; cmake --build . -j $NCPUS"
+   [ ! -f build_${a}_gnu/$LIBNAME ] && ./cc-${a}.sh bash -c "cd build_${a}_gnu ; cmake --build . -j $NCPUS && \${CROSS_COMPILE}strip -s $LIBNAME"
    if [ -f build_${a}_gnu/$LIBNAME ] ; then
       d=""
       [ "$a" = "arm64" ] && d="aarch64-linux-gnu"
@@ -196,7 +196,7 @@ for a in "${ARCHS_GNU[@]}" ; do
    echo "[$a]..."
    arch=${a}
    [ "$a" = "x64" ] && arch="x86_64"
-   [ ! -d buildw_${a}_gnu -o ! -f buildw_${a}_gnu/$LIBNAME ] && ./cc-${a}.sh bash -c "cd $WRTC_SRC; ./make_clib.sh linux ${arch} ../buildw_${a}_gnu"
+   [ ! -d buildw_${a}_gnu -o ! -f buildw_${a}_gnu/$LIBNAME ] && ./cc-${a}.sh bash -c "cd $WRTC_SRC; ./make_clib.sh linux ${arch} ../buildw_${a}_gnu && \${CROSS_COMPILE}strip -s ../buildw_${a}_gnu/$LIBNAME"
    if [ -f buildw_${a}_gnu/$LIBNAME ] ; then
       d=""
       [ "$a" = "arm64" ] && d="aarch64-linux-gnu"
