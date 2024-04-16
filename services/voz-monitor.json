@@ -1,0 +1,7 @@
+{
+   "exe": "/opt/voz/voz-ser",
+   "dev": "/dev/ttyS4",
+   "wakewords": "/boot/wwmodels",
+   "pidfile": "/run/voz-ser.pid",
+   "retry": 3
+}

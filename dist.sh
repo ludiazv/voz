@@ -12,7 +12,7 @@ WWMODEL_DIR_NAME="wwmodels"
 MODEL_DIR="${SCRIPT_DIR}/$MODEL_DIR_NAME"
 WWMODEL_DIR="${SCRIPT_DIR}/$WWMODEL_DIR_NAME"
 ARCHS=( "x86_64-linux-gnu" "aarch64-linux-gnu" "arm-linux-gnueabihf" )
-MODES=( "ReleaseFast" "Debug" ) 
+MODES=( "ReleaseSafe" "Debug" ) 
 
 mkdir -p $DIST_DIR
 
@@ -30,6 +30,10 @@ for m in "${ARCHS[@]}" ; do
       echo "Building for $m [$o]..."
       mkdir -p $DIST_DIR/$o-$m
       zig build -Dtarget=$m -Doptimize=$o --prefix $DIST_DIR --prefix-exe-dir $o-$m --summary all --color off
+      mkdir -p $DIST_DIR/$o-$m/services
+      cp -v ${SCRIPT_DIR}/services/* $DIST_DIR/$o-$m/services/.
+      cp -v ${SCRIPT_DIR}/voz-ser-mon.sh $DIST_DIR/$o-$m/.
+      cp -v ${SCRIPT_DIR}/LICENSE   $DIST_DIR/$o-$m/.
       cp -v $LIB_DIR/$m/lib*.so $DIST_DIR/$o-$m/.
       mkdir -p $DIST_DIR/$o-$m/$MODEL_DIR_NAME
       mkdir -p $DIST_DIR/$o-$m/$WWMODEL_DIR_NAME
