@@ -8,8 +8,6 @@ const util = @import("util.zig");
 const rollbuffer = @import("rollbuffer.zig");
 const log = std.log;
 
-pub const log_level: std.log.Level = .debug;
-
 const no_mamed_model = "no_name";
 
 const args = clap.parseParamsComptime(

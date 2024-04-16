@@ -22,6 +22,9 @@ const args = clap.parseParamsComptime(
 );
 
 const some_help =
+    \\ --int & --led are optional and should be provided with the following format:
+    \\  gpiochip<N>:<line number>
+    \\
     \\ Log information is written to stderr.
     \\ Relevant exit codes:
     \\ 0 => Normally finished do not require restart
@@ -30,6 +33,14 @@ const some_help =
     \\ 5 => Fatal error should not restart.
     \\ 6 => Requested by TERM or INT
 ;
+
+const ExitCode = enum(u8) {
+    RetNormal = 0,
+    RetRestart = 1,
+    RetRestartRetry = 2,
+    RetFatal = 5,
+    RetRequested = 6,
+};
 
 const args_parsers = .{
     .DEV = clap.parsers.string,
@@ -71,12 +82,12 @@ pub fn main() !u8 {
         try stdout.writer().print("voz-ser - serial interface for voz-pre and voz-oww\n", .{});
         try clap.help(stdout.writer(), clap.Help, &args, .{});
         try stdout.writer().print("\n{s}\n", .{some_help});
-        return 0;
+        return @intFromEnum(ExitCode.RetNormal);
     }
     // Print version
     if (arg.args.version != 0) {
         stdout.writer().print("{s}\n", .{util.VOZ_VERSION}) catch unreachable;
-        return 0;
+        return @intFromEnum(ExitCode.RetNormal);
     }
 
     // Extract parameters
@@ -90,7 +101,7 @@ pub fn main() !u8 {
         // Init gpio control
         gpiod.GpioController.init(allocator, arg.args.led, arg.args.int) catch |err| {
             stderr.writer().print("Fatal error: could not init gpios => {}", .{err}) catch unreachable;
-            return 5;
+            return @intFromEnum(ExitCode.RetFatal);
         }
     else
         null;
@@ -99,7 +110,7 @@ pub fn main() !u8 {
     // Init Serial port
     var dev_serial = std.fs.cwd().openFile(dev_path, .{ .mode = .read_write }) catch |err| {
         stderr.writer().print("Fatal error: Could not open {s} => {}", .{ dev_path, err }) catch unreachable;
-        return 5;
+        return @intFromEnum(ExitCode.RetFatal);
     };
     defer dev_serial.close();
 
@@ -113,7 +124,7 @@ pub fn main() !u8 {
             .handshake = .none,
         }) catch |err| {
             stderr.writer().print("Fatal error: Could not configure serial {s} => {}", .{ dev_path, err }) catch unreachable;
-            return 5;
+            return @intFromEnum(ExitCode.RetFatal);
         };
 
         // Hack: as zig_serial does not support serial timeout we simply call termios on hte same handle.
@@ -121,12 +132,16 @@ pub fn main() !u8 {
         settings.cc[5] = 3; // VTIME is index 5. set the timeout to 200ms (2* tenths of secods)
         std.os.tcsetattr(dev_serial.handle, .NOW, settings) catch |err| {
             stderr.writer().print("Fatal error: Could not set serial port timeout {s} => {}", .{ dev_path, err }) catch unreachable;
+            return @intFromEnum(ExitCode.RetFatal);
         };
     }
 
     ll.info("Configured serial port '{s}'", .{dev_path});
     ll.info("Starting control loop with ww_path={s} model_path={s}...", .{ ww_path, model_path });
-    var control = try ser.Control.init(allocator, dev_serial, ww_path, model_path);
+    var control = ser.Control.init(allocator, dev_serial, ww_path, model_path) catch |err| {
+        stderr.writer().print("Fatal error: Could not initiate serial controller => {}", .{err}) catch unreachable;
+        return @intFromEnum(ExitCode.RetFatal);
+    };
     control.ww_list.details();
     defer control.deinit();
 
@@ -147,7 +162,7 @@ pub fn main() !u8 {
     ll.info("Sending initial status..", .{});
     control.sendStatus(true); // Send status on startup
 
-    ll.info("Starting service...", .{});
+    ll.info("Starting serial service...", .{});
     var timer = try std.time.Timer.start();
     var audio_frames: u32 = 0;
 
@@ -167,7 +182,7 @@ pub fn main() !u8 {
             // TODO manage err type
             ll.err("POLL ERR=>{}", .{err});
             keep_running = false;
-            exit_code = 5;
+            exit_code = ExitCode.RetFatal;
             continue;
         };
 
@@ -180,7 +195,7 @@ pub fn main() !u8 {
             },
             .Reboot => {
                 ll.info("Reboot", .{});
-                exit_code = 1;
+                exit_code = ExitCode.RetRestart;
                 keep_running = false;
             },
             .Mode => |m| {
@@ -213,7 +228,13 @@ pub fn main() !u8 {
         if (pr.child_event) |ce| switch (ce) {
             .Eof => child_stdout_eof = true,
             .WwReady => |b| ll.info("Wakeword detection is ready={}", .{b}),
-            .WwMatch => |m| control.sendMatch(m),
+            .WwMatch => |m| {
+                control.sendMatch(m);
+                if (gpio_control) |*gc| {
+                    gc.action(.Int);
+                    gc.action(.Blink);
+                }
+            },
             else => ll.warn("Unexpected child event '{}'", .{ce}),
         };
 
@@ -254,18 +275,18 @@ pub fn main() !u8 {
     if (gpio_control) |*gc| gc.action(.Quit);
     if (gpio_thread) |*gt| gt.join();
 
-    return exit_code;
+    return @intFromEnum(exit_code);
 }
 
 var keep_running: bool = true;
-var exit_code: u8 = 1;
+var exit_code: ExitCode = ExitCode.RetRestart;
 var sig_chld: bool = false;
 
 fn handleSignals(sig: c_int) callconv(.C) void {
     switch (sig) {
         std.os.SIG.TERM, std.os.SIG.INT => {
             keep_running = false;
-            exit_code = 6;
+            exit_code = ExitCode.RetRequested;
             ll.info("Termination Signal {d} received. Gracefully terminating.", .{sig});
         },
         std.os.SIG.CHLD => {
