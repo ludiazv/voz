@@ -16,6 +16,7 @@ This project is experimental and acepts only signed 16bit(LE) mono PCM audio at 
 
 Run the each command with ``--help`` to check out all avaiable options.
 
+
 Wakeword detection:
 
 Detect "Alexa" wakeword:
@@ -33,14 +34,13 @@ $ cat audio.wav | ./voz-pre --ouput wav --noiser=4 --preamp=3 --autogain=30 > au
 Serial backend:
 
 ```bash
-$ 
+$ ./voz-pre --device /dev/ttyS3 
 ```
 
 
 **Note:**
 
-The tools require loading of dynamic libs packed toghether with the tools. It could be required to use the env variable ``LD_LIBRARY_PATH`` to set
-the path where the dynamic librare are. 
+The tools require loading of dynamic libs packed toghether with the tools. It could be required to use the env variable ``LD_LIBRARY_PATH`` to set the path where the dynamic librare are. 
 
 
 ## Build
@@ -68,5 +68,10 @@ $ zig build
 At the moment three archs are supported: am64, arm64 and armv7-a (with hf and NEON) for gnu abi.
 
 
+## TODO
+
+- Make ```voz-ser``` work with preprocessor.
+- systemd service
+- openrc service
 
 
