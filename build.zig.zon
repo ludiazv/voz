@@ -1,6 +1,6 @@
 .{
     .name = "voz",
-    .version = "0.0.1",
+    .version = "0.1.0",
     .dependencies = .{
         //.network = .{
         //    .url = "https://github.com/MasterQ32/zig-network/archive/07ef40cacd7b00bc0f26e254d97d4d4c9071195a.tar.gz",
