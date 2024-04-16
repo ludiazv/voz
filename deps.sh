@@ -16,7 +16,8 @@ WWMODELS=("alexa_v0.1.tflite" "hey_jarvis_v0.1.tflite" "hey_mycroft_v0.1.tflite"
 
 LIBS_DIR="${SCRIPT_DIR}/lib"
 DIST_DIR="${SCRIPT_DIR}/dist"
-TF_VERSION="v2.15.0"
+#TF_VERSION="v2.15.0"
+TF_VERSION="v2.16.1"
 WRTC_VERSION="v1.2.3b"
 TMP_LIBS="${SCRIPT_DIR}/tmp_libs"
 #TF_TMP="tmp_tfl"
@@ -53,6 +54,8 @@ if [ "$1" == "clean" ] ; then
    [ -d $LIBS_DIR ] && rm -fR $LIBS_DIR
    [ -d $SCRIPT_DIR/zig-cache ] && rm -fR $SCRIPT_DIR/zig-cache
    [ -d $SCRIPT_DIR/zig-out ]   && rm -fR $SCRIPT_DIR/zig-out
+   [ -d $SCRIPT_DIR/models ] && rm -fR $SCRIPT_DIR/models
+   [ -d $SCRIPT_DIR/wwmodels ] && rm -fR $SCRIPT_DIR/wwmodels
    echo "Done!"
    exit 0
 fi
@@ -260,5 +263,13 @@ function build_musl() {
 #done
 
 popd
+
+echo 
+echo "Creating libcache tarball"
+echo "========================="
+[ -f $SCRIPT_DIR/libcache.tar.xz ] && rm $SCRIPT_DIR/libcache.tar.xz
+tar cvf libcache.tar lib
+xz -9 libcache.tar
+
 
 echo "FINISHED"
